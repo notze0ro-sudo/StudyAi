@@ -1,0 +1,2106 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>StudyBot — AI Study Companion</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ============================================================
+       DESIGN TOKENS
+       ============================================================ */
+    :root {
+      --bg-page:          #F5F3EE;
+      --bg-panel:         #FFFFFF;
+      --bg-sidebar:       #1A1A1A;
+      --border:           #E2DDD6;
+      --text-primary:     #1A1A1A;
+      --text-secondary:   #6B6560;
+      --text-muted:       #9E9992;
+      --text-on-dark:     #F5F3EE;
+      --accent:           #2D6A4F;
+      --accent-hover:     #1B4332;
+      --accent-text:      #FFFFFF;
+      --bubble-user:      #2D6A4F;
+      --bubble-user-text: #FFFFFF;
+      --bubble-ai:        #FFFFFF;
+      --bubble-ai-text:   #1A1A1A;
+      --bubble-ai-border: #E2DDD6;
+      --input-bg:         #FFFFFF;
+      --input-border:     #D4CFC8;
+      --input-focus:      #2D6A4F;
+      --typing-dot:       #C4BFB8;
+      --scrollbar:        #D4CFC8;
+      --shadow-panel:     0 2px 16px rgba(0,0,0,0.08);
+      --shadow-card:      0 4px 24px rgba(0,0,0,0.10);
+      --sidebar-w:        272px;
+      --header-h:         62px;
+      --radius-bubble:    18px;
+      --radius-ui:        10px;
+    }
+
+    [data-theme="dark"] {
+      --bg-page:          #111111;
+      --bg-panel:         #1C1C1C;
+      --bg-sidebar:       #0A0A0A;
+      --border:           #2E2E2E;
+      --text-primary:     #EDEBE6;
+      --text-secondary:   #8A8680;
+      --text-muted:       #5A5650;
+      --text-on-dark:     #EDEBE6;
+      --accent:           #52B788;
+      --accent-hover:     #74C69D;
+      --accent-text:      #0A0A0A;
+      --bubble-user:      #52B788;
+      --bubble-user-text: #0A0A0A;
+      --bubble-ai:        #252525;
+      --bubble-ai-text:   #EDEBE6;
+      --bubble-ai-border: #2E2E2E;
+      --input-bg:         #252525;
+      --input-border:     #3A3A3A;
+      --input-focus:      #52B788;
+      --typing-dot:       #444;
+      --scrollbar:        #2E2E2E;
+      --shadow-panel:     0 2px 16px rgba(0,0,0,0.4);
+      --shadow-card:      0 4px 24px rgba(0,0,0,0.5);
+    }
+
+    /* ============================================================
+       RESET & BASE
+       ============================================================ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      height: 100%;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px;
+      background: var(--bg-page);
+      color: var(--text-primary);
+      transition: background 0.25s, color 0.25s;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ============================================================
+       AUTH SCREEN  (login / signup)
+       ============================================================ */
+    #authScreen {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      background: var(--bg-page);
+      transition: background 0.25s;
+    }
+
+    .auth-card {
+      width: 100%;
+      max-width: 420px;
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 40px 36px 36px;
+      box-shadow: var(--shadow-card);
+      transition: background 0.25s, border-color 0.25s;
+    }
+
+    .auth-logo {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      margin-bottom: 28px;
+    }
+
+    .auth-logo-icon {
+      width: 38px;
+      height: 38px;
+      background: var(--accent);
+      border-radius: 9px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .auth-logo-text {
+      font-family: 'DM Serif Display', serif;
+      font-size: 22px;
+      color: var(--text-primary);
+    }
+
+    .auth-heading {
+      font-family: 'DM Serif Display', serif;
+      font-size: 26px;
+      color: var(--text-primary);
+      margin-bottom: 6px;
+    }
+
+    .auth-sub {
+      font-size: 14px;
+      color: var(--text-secondary);
+      margin-bottom: 28px;
+      line-height: 1.5;
+    }
+
+    /* Tabs */
+    .auth-tabs {
+      display: flex;
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      overflow: hidden;
+      margin-bottom: 24px;
+    }
+
+    .auth-tab {
+      flex: 1;
+      padding: 10px;
+      background: transparent;
+      border: none;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13.5px;
+      font-weight: 500;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+    }
+
+    .auth-tab.active {
+      background: var(--accent);
+      color: var(--accent-text);
+    }
+
+    /* Form fields */
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 12.5px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      letter-spacing: 0.3px;
+      margin-bottom: 6px;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 11px 14px;
+      border: 1px solid var(--input-border);
+      border-radius: var(--radius-ui);
+      background: var(--input-bg);
+      color: var(--text-primary);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14.5px;
+      outline: none;
+      transition: border-color 0.2s, background 0.25s;
+    }
+
+    .form-input:focus { border-color: var(--input-focus); }
+    .form-input::placeholder { color: var(--text-muted); }
+
+    /* API key row with toggle show/hide */
+    .input-with-action {
+      position: relative;
+    }
+
+    .input-with-action .form-input {
+      padding-right: 44px;
+    }
+
+    .input-eye-btn {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--text-muted);
+      padding: 2px;
+      display: flex;
+      align-items: center;
+    }
+
+    .input-eye-btn:hover { color: var(--text-secondary); }
+
+    .form-hint {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 5px;
+      line-height: 1.5;
+    }
+
+    .form-hint a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    .form-hint a:hover { text-decoration: underline; }
+
+    /* Error message */
+    .form-error {
+      font-size: 12.5px;
+      color: #C0392B;
+      background: #FEE2E2;
+      border: 1px solid #FCA5A5;
+      border-radius: 7px;
+      padding: 9px 12px;
+      margin-bottom: 14px;
+      display: none;
+    }
+
+    [data-theme="dark"] .form-error {
+      background: rgba(220,60,60,0.1);
+      border-color: rgba(220,60,60,0.3);
+      color: #E06060;
+    }
+
+    /* Submit button */
+    .auth-submit-btn {
+      width: 100%;
+      padding: 12px;
+      background: var(--accent);
+      color: var(--accent-text);
+      border: none;
+      border-radius: var(--radius-ui);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.1s;
+      margin-top: 4px;
+    }
+
+    .auth-submit-btn:hover  { background: var(--accent-hover); }
+    .auth-submit-btn:active { transform: scale(0.98); }
+
+    .auth-divider {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 20px 0;
+      color: var(--text-muted);
+      font-size: 12px;
+    }
+
+    .auth-divider::before,
+    .auth-divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* Theme toggle on auth screen */
+    .auth-theme-toggle {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      padding: 7px 10px;
+      cursor: pointer;
+      color: var(--text-secondary);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 12.5px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: background 0.15s, border-color 0.15s;
+    }
+
+    .auth-theme-toggle:hover { border-color: var(--accent); }
+
+    /* ============================================================
+       APP SHELL  (main chat UI)
+       ============================================================ */
+    #appScreen {
+      display: none;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .app-shell {
+      display: flex;
+      height: 100%;
+    }
+
+    /* ---- SIDEBAR ---- */
+    .sidebar {
+      width: var(--sidebar-w);
+      background: var(--bg-sidebar);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+      transition: background 0.25s;
+      overflow: hidden;
+    }
+
+    /* Sidebar top — logo + user info */
+    .sidebar-top {
+      padding: 22px 20px 16px;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+
+    .sidebar-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+
+    .logo-icon {
+      width: 32px;
+      height: 32px;
+      background: var(--accent);
+      border-radius: 7px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .logo-text {
+      font-family: 'DM Serif Display', serif;
+      font-size: 18px;
+      color: var(--text-on-dark);
+    }
+
+    /* User pill */
+    .user-pill {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 8px 10px;
+      background: rgba(255,255,255,0.05);
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.07);
+    }
+
+    .user-avatar {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--accent);
+      color: var(--accent-text);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 700;
+      flex-shrink: 0;
+      font-family: 'DM Serif Display', serif;
+    }
+
+    .user-info { flex: 1; overflow: hidden; }
+
+    .user-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: #DDD;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .user-email {
+      font-size: 11px;
+      color: #666;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* ---- HISTORY SECTION ---- */
+    .sidebar-section {
+      padding: 16px 20px 8px;
+    }
+
+    .sidebar-label {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: #4A4A4A;
+      margin-bottom: 8px;
+    }
+
+    /* New chat button */
+    .new-chat-btn {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      width: 100%;
+      padding: 9px 12px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.09);
+      border-radius: 8px;
+      color: #BBB;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+      margin-bottom: 12px;
+    }
+
+    .new-chat-btn:hover { background: rgba(255,255,255,0.09); color: #FFF; }
+
+    /* History list */
+    .history-list {
+      list-style: none;
+      flex: 1;
+      overflow-y: auto;
+      padding: 0 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+    }
+
+    .history-list::-webkit-scrollbar { width: 3px; }
+    .history-list::-webkit-scrollbar-thumb { background: #2A2A2A; border-radius: 4px; }
+
+    .history-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 9px 10px;
+      border-radius: 7px;
+      cursor: pointer;
+      transition: background 0.14s;
+      min-width: 0;
+    }
+
+    .history-item:hover  { background: rgba(255,255,255,0.05); }
+    .history-item.active { background: rgba(255,255,255,0.09); }
+
+    .history-icon {
+      flex-shrink: 0;
+      color: #555;
+    }
+
+    .history-item.active .history-icon,
+    .history-item:hover  .history-icon { color: #888; }
+
+    .history-text {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .history-title {
+      font-size: 13px;
+      color: #888;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .history-item.active .history-title { color: #EEE; }
+    .history-item:hover  .history-title { color: #CCC; }
+
+    .history-date {
+      font-size: 10.5px;
+      color: #444;
+      margin-top: 1px;
+    }
+
+    .history-item.active .history-date { color: #666; }
+
+    .history-del {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: transparent;
+      padding: 2px;
+      border-radius: 4px;
+      flex-shrink: 0;
+      display: flex;
+      transition: color 0.15s, background 0.15s;
+    }
+
+    .history-item:hover .history-del { color: #555; }
+    .history-del:hover { color: #E06060 !important; background: rgba(220,60,60,0.1); }
+
+    .history-empty {
+      font-size: 12.5px;
+      color: #3A3A3A;
+      padding: 10px 10px;
+      font-style: italic;
+    }
+
+    /* ---- SIDEBAR BOTTOM ---- */
+    .sidebar-bottom {
+      padding: 12px 20px 20px;
+      border-top: 1px solid rgba(255,255,255,0.05);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .sidebar-btn {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 8px 12px;
+      border-radius: 7px;
+      background: transparent;
+      border: 1px solid #242424;
+      color: #666;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 12.5px;
+      font-weight: 500;
+      cursor: pointer;
+      width: 100%;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+      text-align: left;
+    }
+
+    .sidebar-btn:hover { background: rgba(255,255,255,0.05); color: #BBB; border-color: #333; }
+    .logout-btn:hover  { background: rgba(220,60,60,0.07); color: #D06060; border-color: rgba(220,60,60,0.2); }
+
+    /* ---- MAIN ---- */
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      background: var(--bg-page);
+      transition: background 0.25s;
+    }
+
+    /* Header */
+    .chat-header {
+      height: var(--header-h);
+      padding: 0 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--bg-panel);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+      gap: 16px;
+      transition: background 0.25s, border-color 0.25s;
+    }
+
+    .header-left { display: flex; align-items: center; gap: 11px; min-width: 0; }
+
+    .status-dot {
+      width: 8px; height: 8px;
+      background: var(--accent);
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .header-name {
+      font-family: 'DM Serif Display', serif;
+      font-size: 16px;
+      color: var(--text-primary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 280px;
+    }
+
+    .header-sub { font-size: 11.5px; color: var(--text-muted); margin-top: 1px; }
+
+    /* API key area */
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+
+    .api-key-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .api-key-field-wrap {
+      position: relative;
+    }
+
+    .api-key-input {
+      width: 210px;
+      padding: 7px 36px 7px 12px;
+      border: 1px solid var(--input-border);
+      border-radius: 8px;
+      background: var(--input-bg);
+      color: var(--text-primary);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 12.5px;
+      outline: none;
+      transition: border-color 0.2s, background 0.25s;
+    }
+
+    .api-key-input:focus { border-color: var(--input-focus); }
+    .api-key-input::placeholder { color: var(--text-muted); }
+
+    .api-key-eye {
+      position: absolute;
+      right: 9px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--text-muted);
+      padding: 2px;
+      display: flex;
+    }
+
+    .api-key-eye:hover { color: var(--text-secondary); }
+
+    .api-badge {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 9px;
+      border-radius: 20px;
+      white-space: nowrap;
+    }
+
+    .api-badge.ok  { background: #D1FAE5; color: #065F46; }
+    .api-badge.bad { background: #FEE2E2; color: #991B1B; }
+
+    [data-theme="dark"] .api-badge.ok  { background: rgba(82,183,136,0.15); color: #52B788; }
+    [data-theme="dark"] .api-badge.bad { background: rgba(220,60,60,0.12); color: #E06060; }
+
+    /* ============================================================
+       CHAT BODY
+       ============================================================ */
+    .chat-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 24px 28px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      scroll-behavior: smooth;
+    }
+
+    .chat-body::-webkit-scrollbar { width: 5px; }
+    .chat-body::-webkit-scrollbar-track { background: transparent; }
+    .chat-body::-webkit-scrollbar-thumb { background: var(--scrollbar); border-radius: 10px; }
+
+    /* Welcome card */
+    .welcome-card {
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 28px;
+      box-shadow: var(--shadow-panel);
+      transition: background 0.25s, border-color 0.25s;
+    }
+
+    .welcome-card h2 {
+      font-family: 'DM Serif Display', serif;
+      font-size: 22px;
+      color: var(--text-primary);
+      margin-bottom: 8px;
+    }
+
+    .welcome-card p {
+      font-size: 14px;
+      color: var(--text-secondary);
+      line-height: 1.65;
+      margin-bottom: 18px;
+    }
+
+    .api-notice {
+      font-size: 13px;
+      color: var(--text-secondary);
+      background: var(--bg-page);
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      padding: 13px 15px;
+      margin-bottom: 18px;
+      line-height: 1.6;
+    }
+
+    .api-notice strong { color: var(--text-primary); }
+    .api-notice a { color: var(--accent); text-decoration: none; font-weight: 500; }
+    .api-notice a:hover { text-decoration: underline; }
+
+    .suggestion-chips { display: flex; flex-wrap: wrap; gap: 7px; }
+
+    .chip {
+      padding: 7px 14px;
+      background: var(--bg-page);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      font-size: 12.5px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s, color 0.15s;
+      white-space: nowrap;
+      font-family: 'DM Sans', sans-serif;
+    }
+
+    .chip:hover { background: var(--accent); border-color: var(--accent); color: var(--accent-text); }
+
+    /* Date divider */
+    .date-divider {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: var(--text-muted);
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    .date-divider::before,
+    .date-divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* ---- MESSAGE ROWS ---- */
+    .msg-row {
+      display: flex;
+      align-items: flex-end;
+      gap: 9px;
+      animation: msgIn 0.2s ease forwards;
+    }
+
+    @keyframes msgIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .msg-row.user { flex-direction: row-reverse; }
+
+    .avatar {
+      width: 30px; height: 30px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+    }
+
+    .avatar.ai   { background: var(--accent); color: var(--accent-text); font-family: 'DM Serif Display', serif; font-size: 13px; }
+    .avatar.user { background: var(--border); color: var(--text-secondary); font-size: 11px; }
+
+    .bubble {
+      max-width: 68%;
+      padding: 11px 17px;
+      border-radius: var(--radius-bubble);
+      line-height: 1.7;
+      font-size: 14.5px;
+      word-break: break-word;
+    }
+
+    .bubble.ai {
+      background: var(--bubble-ai);
+      color: var(--bubble-ai-text);
+      border: 1px solid var(--bubble-ai-border);
+      border-bottom-left-radius: 4px;
+      box-shadow: var(--shadow-panel);
+      transition: background 0.25s, border-color 0.25s, color 0.25s;
+    }
+
+    .bubble.user {
+      background: var(--bubble-user);
+      color: var(--bubble-user-text);
+      border-bottom-right-radius: 4px;
+    }
+
+    .bubble.error {
+      background: var(--bubble-ai);
+      color: #C0392B;
+      border: 1px solid #F5C6CB;
+      border-bottom-left-radius: 4px;
+    }
+
+    [data-theme="dark"] .bubble.error { color: #E06060; border-color: rgba(220,60,60,0.25); }
+
+    /* Markdown inside AI bubbles */
+    .bubble.ai strong { font-weight: 600; }
+    .bubble.ai em     { font-style: italic; }
+    .bubble.ai code {
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
+      background: var(--bg-page);
+      padding: 2px 5px;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+    }
+    .bubble.ai pre {
+      background: var(--bg-page);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 14px;
+      margin: 8px 0;
+      overflow-x: auto;
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+    .bubble.ai pre code { background: none; border: none; padding: 0; }
+    .bubble.ai ul, .bubble.ai ol { padding-left: 20px; margin: 5px 0; }
+    .bubble.ai li { margin-bottom: 3px; }
+    .bubble.ai p  { margin-bottom: 6px; }
+    .bubble.ai p:last-child { margin-bottom: 0; }
+
+    .msg-time {
+      font-size: 11px;
+      color: var(--text-muted);
+      padding: 0 3px;
+      align-self: flex-end;
+      white-space: nowrap;
+    }
+
+    /* ---- TYPING ---- */
+    .typing-row {
+      display: flex;
+      align-items: flex-end;
+      gap: 9px;
+      animation: msgIn 0.2s ease forwards;
+    }
+
+    .typing-bubble {
+      background: var(--bubble-ai);
+      border: 1px solid var(--bubble-ai-border);
+      border-radius: var(--radius-bubble);
+      border-bottom-left-radius: 4px;
+      padding: 13px 17px;
+      display: flex;
+      gap: 5px;
+      align-items: center;
+      box-shadow: var(--shadow-panel);
+    }
+
+    .dot {
+      width: 6px; height: 6px;
+      background: var(--typing-dot);
+      border-radius: 50%;
+      animation: bounce 1.2s ease infinite;
+    }
+
+    .dot:nth-child(2) { animation-delay: 0.2s; }
+    .dot:nth-child(3) { animation-delay: 0.4s; }
+
+    @keyframes bounce {
+      0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+      30%            { transform: translateY(-5px); opacity: 1; }
+    }
+
+    /* ============================================================
+       INPUT AREA  — pill-style bar
+       ============================================================ */
+    .input-area {
+      background: var(--bg-panel);
+      border-top: 1px solid var(--border);
+      padding: 14px 20px 18px;
+      display: flex;
+      align-items: flex-end;
+      gap: 10px;
+      flex-shrink: 0;
+      transition: background 0.25s, border-color 0.25s;
+    }
+
+    /* The pill wrapper that holds the textarea */
+    .input-pill {
+      flex: 1;
+      display: flex;
+      align-items: flex-end;
+      background: var(--input-bg);
+      border: 1.5px solid var(--input-border);
+      border-radius: 26px;
+      padding: 8px 16px;
+      gap: 10px;
+      transition: border-color 0.2s, background 0.25s, box-shadow 0.2s;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+    }
+
+    .input-pill:focus-within {
+      border-color: var(--input-focus);
+      box-shadow: 0 0 0 3px rgba(45,106,79,0.10);
+    }
+
+    [data-theme="dark"] .input-pill:focus-within {
+      box-shadow: 0 0 0 3px rgba(82,183,136,0.12);
+    }
+
+    .msg-input {
+      flex: 1;
+      resize: none;
+      border: none;
+      background: transparent;
+      color: var(--text-primary);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14.5px;
+      padding: 2px 0;
+      line-height: 1.55;
+      max-height: 130px;
+      overflow-y: auto;
+      outline: none;
+      transition: color 0.25s;
+      /* remove inner scrollbar on the textarea */
+      scrollbar-width: none;
+    }
+
+    .msg-input::-webkit-scrollbar { display: none; }
+    .msg-input::placeholder { color: var(--text-muted); }
+
+    /* Left icon button inside pill (attachment / new chat) */
+    .input-pill-btn {
+      width: 30px; height: 30px;
+      border-radius: 50%;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      color: var(--text-muted);
+      transition: background 0.15s, color 0.15s;
+      align-self: flex-end;
+      margin-bottom: 1px;
+    }
+
+    .input-pill-btn:hover { background: var(--bg-page); color: var(--text-secondary); }
+
+    /* Right circular send button — outside the pill */
+    .send-btn {
+      width: 44px; height: 44px;
+      border-radius: 50%;
+      background: var(--accent);
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: background 0.15s, transform 0.12s, box-shadow 0.15s;
+      box-shadow: 0 2px 8px rgba(45,106,79,0.25);
+      align-self: flex-end;
+    }
+
+    .send-btn:hover  { background: var(--accent-hover); box-shadow: 0 3px 12px rgba(45,106,79,0.35); }
+    .send-btn:active { transform: scale(0.91); }
+    .send-btn:disabled { opacity: 0.32; cursor: not-allowed; transform: none; box-shadow: none; }
+
+    [data-theme="dark"] .send-btn {
+      box-shadow: 0 2px 8px rgba(82,183,136,0.2);
+    }
+
+    /* ============================================================
+       MOBILE
+       ============================================================ */
+    @media (max-width: 700px) {
+      .sidebar { display: none; }
+      .chat-header { padding: 0 14px; }
+      .chat-body   { padding: 16px 14px 10px; }
+      .input-area  { padding: 10px 12px 14px; }
+      .bubble      { max-width: 85%; }
+      .api-key-input { width: 140px; }
+
+      .mobile-bar {
+        display: flex !important;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 14px;
+        height: 52px;
+        background: var(--bg-sidebar);
+        flex-shrink: 0;
+        border-bottom: 1px solid rgba(255,255,255,0.05);
+      }
+
+      .mobile-logo {
+        font-family: 'DM Serif Display', serif;
+        font-size: 17px;
+        color: #EEE;
+      }
+
+      .mobile-actions { display: flex; gap: 8px; }
+
+      .mobile-btn {
+        background: transparent;
+        border: 1px solid #2E2E2E;
+        color: #888;
+        border-radius: 7px;
+        padding: 5px 11px;
+        font-size: 12.5px;
+        cursor: pointer;
+        font-family: 'DM Sans', sans-serif;
+        font-weight: 500;
+        transition: background 0.15s, color 0.15s;
+      }
+
+      .mobile-btn:hover { background: rgba(255,255,255,0.06); color: #CCC; }
+    }
+
+    .mobile-bar { display: none; }
+    strong { font-weight: 600; }
+    em { font-style: italic; }
+  </style>
+</head>
+
+<body>
+
+  <!-- ============================================================
+       AUTH SCREEN
+       ============================================================ -->
+  <div id="authScreen">
+
+    <!-- Theme toggle -->
+    <button class="auth-theme-toggle" onclick="toggleTheme()" id="authThemeBtn">
+      <svg id="authThemeIcon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+      </svg>
+      <span id="authThemeLabel">Dark Mode</span>
+    </button>
+
+    <div class="auth-card">
+
+      <!-- Logo -->
+      <div class="auth-logo">
+        <div class="auth-logo-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+          </svg>
+        </div>
+        <span class="auth-logo-text">StudyBot</span>
+      </div>
+
+      <h1 class="auth-heading" id="authHeading">Welcome back</h1>
+      <p class="auth-sub" id="authSubtext">Sign in to continue your learning journey.</p>
+
+      <!-- Tabs -->
+      <div class="auth-tabs">
+        <button class="auth-tab active" id="tabLogin"  onclick="switchTab('login')">Sign In</button>
+        <button class="auth-tab"        id="tabSignup" onclick="switchTab('signup')">Create Account</button>
+      </div>
+
+      <!-- Error message -->
+      <div class="form-error" id="authError"></div>
+
+      <!-- LOGIN FORM -->
+      <div id="loginForm">
+        <div class="form-group">
+          <label class="form-label">Email address</label>
+          <input type="email" class="form-input" id="loginEmail" placeholder="you@example.com" autocomplete="email" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <div class="input-with-action">
+            <input type="password" class="form-input" id="loginPassword" placeholder="Your password" autocomplete="current-password" onkeydown="if(event.key==='Enter') submitLogin()" />
+            <button class="input-eye-btn" onclick="togglePassVis('loginPassword', this)" tabindex="-1">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                <circle cx="12" cy="12" r="3"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+        <button class="auth-submit-btn" onclick="submitLogin()">Sign In</button>
+      </div>
+
+      <!-- SIGNUP FORM -->
+      <div id="signupForm" style="display:none;">
+        <div class="form-group">
+          <label class="form-label">Full name</label>
+          <input type="text" class="form-input" id="signupName" placeholder="Jane Smith" autocomplete="name" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email address</label>
+          <input type="email" class="form-input" id="signupEmail" placeholder="you@example.com" autocomplete="email" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <div class="input-with-action">
+            <input type="password" class="form-input" id="signupPassword" placeholder="At least 6 characters" autocomplete="new-password" />
+            <button class="input-eye-btn" onclick="togglePassVis('signupPassword', this)" tabindex="-1">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                <circle cx="12" cy="12" r="3"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Anthropic API Key <span style="color:var(--text-muted);font-weight:400;">(optional — can be added later)</span></label>
+          <div class="input-with-action">
+            <input type="password" class="form-input" id="signupApiKey" placeholder="sk-ant-..." autocomplete="off" />
+            <button class="input-eye-btn" onclick="togglePassVis('signupApiKey', this)" tabindex="-1">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                <circle cx="12" cy="12" r="3"/>
+              </svg>
+            </button>
+          </div>
+          <p class="form-hint">Get a free key at <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a>. Any valid API key format is accepted.</p>
+        </div>
+        <button class="auth-submit-btn" onclick="submitSignup()">Create Account</button>
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- ============================================================
+       APP SCREEN
+       ============================================================ -->
+  <div id="appScreen">
+    <div class="app-shell">
+
+      <!-- SIDEBAR -->
+      <aside class="sidebar">
+
+        <div class="sidebar-top">
+          <!-- Logo -->
+          <div class="sidebar-logo">
+            <div class="logo-icon">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+              </svg>
+            </div>
+            <span class="logo-text">StudyBot</span>
+          </div>
+
+          <!-- Logged-in user pill -->
+          <div class="user-pill">
+            <div class="user-avatar" id="userAvatar">J</div>
+            <div class="user-info">
+              <div class="user-name"  id="userNameDisplay">Jane Smith</div>
+              <div class="user-email" id="userEmailDisplay">user@example.com</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- New chat -->
+        <div class="sidebar-section">
+          <button class="new-chat-btn" onclick="newChat()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            New Conversation
+          </button>
+          <p class="sidebar-label">Recent</p>
+        </div>
+
+        <!-- History list -->
+        <ul class="history-list" id="historyList">
+          <li class="history-empty">No conversations yet.</li>
+        </ul>
+
+        <!-- Bottom controls -->
+        <div class="sidebar-bottom">
+          <button class="sidebar-btn" id="themeToggle" onclick="toggleTheme()">
+            <svg id="themeIcon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+            </svg>
+            <span id="themeLabel">Dark Mode</span>
+          </button>
+          <button class="sidebar-btn logout-btn" onclick="logout()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+              <polyline points="16 17 21 12 16 7"/>
+              <line x1="21" y1="12" x2="9" y2="12"/>
+            </svg>
+            Sign Out
+          </button>
+        </div>
+      </aside>
+
+      <!-- MAIN -->
+      <div class="main">
+
+        <!-- Mobile bar -->
+        <div class="mobile-bar" id="mobileBar">
+          <span class="mobile-logo">StudyBot</span>
+          <div class="mobile-actions">
+            <button class="mobile-btn" onclick="toggleTheme()" id="mobileThemeBtn">Dark</button>
+            <button class="mobile-btn" onclick="newChat()">New</button>
+          </div>
+        </div>
+
+        <!-- Header -->
+        <div class="chat-header">
+          <div class="header-left">
+            <div class="status-dot" id="statusDot"></div>
+            <div>
+              <div class="header-name" id="chatTitle">Study Assistant</div>
+              <div class="header-sub">Powered by Claude AI</div>
+            </div>
+          </div>
+          <div class="header-right">
+            <div class="api-key-wrap">
+              <div class="api-key-field-wrap">
+                <input type="password" class="api-key-input" id="apiKeyInput"
+                  placeholder="Paste API key here..."
+                  oninput="handleApiKeyChange()"
+                  autocomplete="off" />
+                <button class="api-key-eye" onclick="togglePassVis('apiKeyInput', this)" tabindex="-1">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                    <circle cx="12" cy="12" r="3"/>
+                  </svg>
+                </button>
+              </div>
+              <span class="api-badge bad" id="apiBadge">No key</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Messages -->
+        <div class="chat-body" id="chatBody"></div>
+
+        <!-- Input -->
+        <div class="input-area">
+
+          <!-- Pill: left button + textarea -->
+          <div class="input-pill">
+            <!-- New chat / attachment button on the left -->
+            <button class="input-pill-btn" onclick="newChat()" title="New conversation">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19"/>
+                <line x1="5" y1="12" x2="19" y2="12"/>
+              </svg>
+            </button>
+
+            <textarea class="msg-input" id="msgInput"
+              placeholder="Ask me anything..."
+              rows="1" maxlength="4000"
+              onkeydown="handleKey(event)"
+              oninput="autoResize(this)"></textarea>
+          </div>
+
+          <!-- Circular send button outside the pill -->
+          <button class="send-btn" id="sendBtn" onclick="handleSend()" title="Send">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="var(--accent-text)">
+              <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+            </svg>
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+
+<script>
+/* ============================================================
+   STUDYBOT — FULL APPLICATION LOGIC
+   Sections:
+   1.  Storage helpers
+   2.  Theme management
+   3.  Auth (login / signup / logout)
+   4.  App initialization
+   5.  API key management
+   6.  Conversation & history management
+   7.  Claude API call
+   8.  Markdown renderer
+   9.  UI helpers
+   10. Message rendering
+   11. Event handlers
+   ============================================================ */
+
+
+/* ────────────────────────────────────────────────
+   1. STORAGE HELPERS
+──────────────────────────────────────────────── */
+
+const DB = {
+  get:    (k)    => { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } },
+  set:    (k, v) => localStorage.setItem(k, JSON.stringify(v)),
+  remove: (k)    => localStorage.removeItem(k),
+};
+
+const KEYS = {
+  theme:       'sb_theme',
+  users:       'sb_users',       // { email: { name, email, passwordHash, apiKey } }
+  session:     'sb_session',     // { email }
+  convPrefix:  'sb_convs_',      // + email → [{ id, title, messages[], createdAt }]
+};
+
+function userConvsKey(email) { return KEYS.convPrefix + email; }
+
+
+/* ────────────────────────────────────────────────
+   2. THEME MANAGEMENT
+──────────────────────────────────────────────── */
+
+(function initTheme() { applyTheme(DB.get(KEYS.theme) || 'light'); })();
+
+function toggleTheme() {
+  const next = document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+  applyTheme(next);
+  DB.set(KEYS.theme, next);
+}
+
+function applyTheme(t) {
+  document.documentElement.setAttribute('data-theme', t);
+  const dark = t === 'dark';
+
+  // All moon/sun icons
+  const moonPath  = `<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>`;
+  const sunPaths  = `<circle cx="12" cy="12" r="5"/>
+    <line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/>
+    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+    <line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/>
+    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>`;
+
+  ['themeIcon','authThemeIcon'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = dark ? sunPaths : moonPath;
+  });
+
+  ['themeLabel','authThemeLabel'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = dark ? 'Light Mode' : 'Dark Mode';
+  });
+
+  const mb = document.getElementById('mobileThemeBtn');
+  if (mb) mb.textContent = dark ? 'Light' : 'Dark';
+}
+
+
+/* ────────────────────────────────────────────────
+   3. AUTH — login / signup / logout
+   Accounts are stored in localStorage.
+   Passwords are stored as a simple hash (not
+   cryptographically secure — suitable for a
+   client-side demo; never store real passwords
+   this way in production).
+──────────────────────────────────────────────── */
+
+/** Very simple deterministic hash for demo purposes. */
+function simpleHash(str) {
+  let h = 0;
+  for (let i = 0; i < str.length; i++) {
+    h = Math.imul(31, h) + str.charCodeAt(i) | 0;
+  }
+  return h.toString(36);
+}
+
+function switchTab(tab) {
+  const isLogin = tab === 'login';
+  document.getElementById('loginForm').style.display  = isLogin ? ''     : 'none';
+  document.getElementById('signupForm').style.display = isLogin ? 'none' : '';
+  document.getElementById('tabLogin').classList.toggle('active',  isLogin);
+  document.getElementById('tabSignup').classList.toggle('active', !isLogin);
+  document.getElementById('authHeading').textContent  = isLogin ? 'Welcome back'   : 'Create an account';
+  document.getElementById('authSubtext').textContent  = isLogin
+    ? 'Sign in to continue your learning journey.'
+    : 'Join StudyBot and start learning smarter.';
+  clearAuthError();
+}
+
+function showAuthError(msg) {
+  const el = document.getElementById('authError');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+function clearAuthError() {
+  const el = document.getElementById('authError');
+  el.style.display = 'none';
+  el.textContent = '';
+}
+
+function submitLogin() {
+  clearAuthError();
+  const email    = document.getElementById('loginEmail').value.trim().toLowerCase();
+  const password = document.getElementById('loginPassword').value;
+
+  if (!email)    return showAuthError('Please enter your email address.');
+  if (!password) return showAuthError('Please enter your password.');
+
+  const users = DB.get(KEYS.users) || {};
+  const user  = users[email];
+
+  if (!user)                                  return showAuthError('No account found with that email address.');
+  if (user.passwordHash !== simpleHash(password)) return showAuthError('Incorrect password. Please try again.');
+
+  // Create session
+  DB.set(KEYS.session, { email });
+  enterApp(user);
+}
+
+function submitSignup() {
+  clearAuthError();
+  const name     = document.getElementById('signupName').value.trim();
+  const email    = document.getElementById('signupEmail').value.trim().toLowerCase();
+  const password = document.getElementById('signupPassword').value;
+  const apiKey   = document.getElementById('signupApiKey').value.trim();
+
+  if (!name)             return showAuthError('Please enter your full name.');
+  if (!email)            return showAuthError('Please enter your email address.');
+  if (!email.includes('@')) return showAuthError('Please enter a valid email address.');
+  if (!password)         return showAuthError('Please create a password.');
+  if (password.length < 6) return showAuthError('Password must be at least 6 characters.');
+
+  const users = DB.get(KEYS.users) || {};
+  if (users[email]) return showAuthError('An account with that email already exists. Please sign in instead.');
+
+  const newUser = {
+    name,
+    email,
+    passwordHash: simpleHash(password),
+    apiKey: apiKey || '',
+  };
+
+  users[email] = newUser;
+  DB.set(KEYS.users, users);
+  DB.set(KEYS.session, { email });
+  enterApp(newUser);
+}
+
+function logout() {
+  DB.remove(KEYS.session);
+  appState.currentUser   = null;
+  appState.apiKey        = '';
+  appState.conversations = [];
+  appState.activeId      = null;
+  appState.isStreaming   = false;
+
+  document.getElementById('appScreen').style.display  = 'none';
+  document.getElementById('authScreen').style.display = 'flex';
+  // Clear sensitive fields
+  document.getElementById('loginEmail').value    = '';
+  document.getElementById('loginPassword').value = '';
+  document.getElementById('apiKeyInput').value   = '';
+  switchTab('login');
+}
+
+function togglePassVis(inputId, btn) {
+  const input = document.getElementById(inputId);
+  const show  = input.type === 'password';
+  input.type  = show ? 'text' : 'password';
+  // Swap icon
+  btn.innerHTML = show
+    ? `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+         <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
+         <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
+         <line x1="1" y1="1" x2="23" y2="23"/>
+       </svg>`
+    : `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+         <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+         <circle cx="12" cy="12" r="3"/>
+       </svg>`;
+}
+
+
+/* ────────────────────────────────────────────────
+   4. APP INITIALIZATION
+──────────────────────────────────────────────── */
+
+const appState = {
+  currentUser:   null,
+  apiKey:        '',
+  conversations: [],
+  activeId:      null,
+  isStreaming:   false,
+};
+
+// Check for an existing session on page load
+(function checkSession() {
+  const session = DB.get(KEYS.session);
+  if (!session) return;
+
+  const users = DB.get(KEYS.users) || {};
+  const user  = users[session.email];
+  if (!user)  return;
+
+  enterApp(user);
+})();
+
+/**
+ * Transition from auth screen to the main app.
+ * @param {{ name, email, apiKey }} user
+ */
+function enterApp(user) {
+  appState.currentUser = user;
+
+  // Populate user UI
+  const initials = user.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+  document.getElementById('userAvatar').textContent      = initials;
+  document.getElementById('userNameDisplay').textContent  = user.name;
+  document.getElementById('userEmailDisplay').textContent = user.email;
+
+  // Restore API key if the user saved one
+  if (user.apiKey) {
+    document.getElementById('apiKeyInput').value = user.apiKey;
+    appState.apiKey = user.apiKey;
+    updateApiBadge(user.apiKey);
+  } else {
+    updateApiBadge('');
+  }
+
+  // Load conversations for this user
+  appState.conversations = DB.get(userConvsKey(user.email)) || [];
+  appState.activeId      = appState.conversations[0]?.id || null;
+
+  document.getElementById('authScreen').style.display = 'none';
+  document.getElementById('appScreen').style.display  = 'block';
+
+  renderHistoryList();
+
+  if (appState.activeId) {
+    renderConversation(appState.activeId);
+  } else {
+    showWelcomeCard();
+  }
+}
+
+
+/* ────────────────────────────────────────────────
+   5. API KEY MANAGEMENT
+   Accept ANY non-empty key — no format enforcement.
+   The API call will return an error naturally if the
+   key is invalid.
+──────────────────────────────────────────────── */
+
+function handleApiKeyChange() {
+  const key = document.getElementById('apiKeyInput').value.trim();
+  appState.apiKey = key;
+  updateApiBadge(key);
+
+  // Persist the key to the user's profile
+  if (appState.currentUser) {
+    const users = DB.get(KEYS.users) || {};
+    if (users[appState.currentUser.email]) {
+      users[appState.currentUser.email].apiKey = key;
+      DB.set(KEYS.users, users);
+      appState.currentUser.apiKey = key;
+    }
+  }
+}
+
+function updateApiBadge(key) {
+  const badge = document.getElementById('apiBadge');
+  const dot   = document.getElementById('statusDot');
+  if (!badge) return;
+  const hasKey = key && key.length > 8;
+  badge.textContent  = hasKey ? 'Connected' : 'No key';
+  badge.className    = 'api-badge ' + (hasKey ? 'ok' : 'bad');
+  if (dot) dot.style.background = hasKey ? 'var(--accent)' : '#E06060';
+}
+
+
+/* ────────────────────────────────────────────────
+   6. CONVERSATION & HISTORY MANAGEMENT
+──────────────────────────────────────────────── */
+
+function saveConvs() {
+  if (!appState.currentUser) return;
+  DB.set(userConvsKey(appState.currentUser.email), appState.conversations);
+}
+
+function activeConvo() {
+  return appState.conversations.find(c => c.id === appState.activeId) || null;
+}
+
+function makeTitleFromMessage(text) {
+  const clean = text.replace(/\s+/g, ' ').trim();
+  return clean.length > 40 ? clean.slice(0, 40) + '...' : clean;
+}
+
+function formatRelativeDate(ts) {
+  const now  = Date.now();
+  const diff = now - ts;
+  const days = Math.floor(diff / 86400000);
+  if (days === 0) return 'Today';
+  if (days === 1) return 'Yesterday';
+  if (days < 7)  return days + ' days ago';
+  return new Date(ts).toLocaleDateString([], { month: 'short', day: 'numeric' });
+}
+
+/** Create a new blank conversation. */
+function newChat() {
+  const id = 'c_' + Date.now();
+  appState.conversations.unshift({ id, title: 'New Conversation', messages: [], createdAt: Date.now() });
+  appState.activeId = id;
+  saveConvs();
+  renderHistoryList();
+  renderConversation(id);
+}
+
+/** Switch to an existing conversation. */
+function loadConversation(id) {
+  appState.activeId = id;
+  renderHistoryList();
+  renderConversation(id);
+}
+
+/** Delete a conversation. */
+function deleteConversation(id) {
+  appState.conversations = appState.conversations.filter(c => c.id !== id);
+  if (appState.activeId === id) {
+    appState.activeId = appState.conversations[0]?.id || null;
+  }
+  saveConvs();
+  renderHistoryList();
+  appState.activeId ? renderConversation(appState.activeId) : showWelcomeCard();
+}
+
+/** Re-render the sidebar history list. */
+function renderHistoryList() {
+  const list = document.getElementById('historyList');
+  list.innerHTML = '';
+
+  if (!appState.conversations.length) {
+    list.innerHTML = '<li class="history-empty">No conversations yet.</li>';
+    return;
+  }
+
+  appState.conversations.forEach(conv => {
+    const li = document.createElement('li');
+    li.className = 'history-item' + (conv.id === appState.activeId ? ' active' : '');
+
+    // Chat icon
+    const icon = document.createElement('div');
+    icon.className = 'history-icon';
+    icon.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+    </svg>`;
+
+    // Text block
+    const textBlock = document.createElement('div');
+    textBlock.className = 'history-text';
+
+    const titleEl = document.createElement('div');
+    titleEl.className = 'history-title';
+    titleEl.textContent = conv.title;
+
+    const dateEl = document.createElement('div');
+    dateEl.className = 'history-date';
+    dateEl.textContent = formatRelativeDate(conv.createdAt);
+
+    textBlock.appendChild(titleEl);
+    textBlock.appendChild(dateEl);
+
+    // Delete button
+    const del = document.createElement('button');
+    del.className = 'history-del';
+    del.title = 'Delete';
+    del.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+    </svg>`;
+    del.addEventListener('click', e => { e.stopPropagation(); deleteConversation(conv.id); });
+
+    li.appendChild(icon);
+    li.appendChild(textBlock);
+    li.appendChild(del);
+    li.addEventListener('click', () => loadConversation(conv.id));
+    list.appendChild(li);
+  });
+}
+
+/** Re-render the chat window for a conversation. */
+function renderConversation(id) {
+  const conv = appState.conversations.find(c => c.id === id);
+  const body = document.getElementById('chatBody');
+  body.innerHTML = '';
+
+  document.getElementById('chatTitle').textContent = conv?.title || 'Study Assistant';
+
+  if (!conv || !conv.messages.length) {
+    const em = document.createElement('div');
+    em.style.cssText = 'display:flex;align-items:center;justify-content:center;height:100%;color:var(--text-muted);font-size:14px;';
+    em.textContent = 'Start the conversation below.';
+    body.appendChild(em);
+    return;
+  }
+
+  let lastDate = null;
+  conv.messages.forEach(msg => {
+    const dateStr = msg.ts
+      ? new Date(msg.ts).toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric' })
+      : null;
+
+    if (dateStr && dateStr !== lastDate) {
+      lastDate = dateStr;
+      const div = document.createElement('div');
+      div.className = 'date-divider';
+      div.textContent = dateStr;
+      body.appendChild(div);
+    }
+
+    appendBubble(msg.role === 'user' ? 'user' : 'ai', msg.content, msg.ts, false);
+  });
+
+  scrollToBottom();
+}
+
+/** Show the welcome/start card when no conversation is active. */
+function showWelcomeCard() {
+  const body = document.getElementById('chatBody');
+  body.innerHTML = '';
+  document.getElementById('chatTitle').textContent = 'Study Assistant';
+
+  const card = document.createElement('div');
+  card.className = 'welcome-card';
+  card.innerHTML = `
+    <h2>Hello, ${appState.currentUser?.name?.split(' ')[0] || 'Scholar'}</h2>
+    <p>I am StudyBot, your personal AI study companion powered by Claude. Ask me anything — homework help, concept explanations, study strategies, essay writing, mathematics, sciences, history, and more.</p>
+    <div class="api-notice" id="apiNotice" style="${appState.apiKey ? 'display:none' : ''}">
+      <strong>One step remaining:</strong> Paste your Anthropic API key in the field at the top right to activate the AI.
+      Get a free key at <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a>.
+      Any API key format is accepted.
+    </div>
+    <div class="suggestion-chips" id="suggChips"></div>`;
+  body.appendChild(card);
+
+  // Build suggestion chips safely via JS to avoid apostrophe escaping issues
+  const chipData = [
+    ['Help me understand the Pythagorean theorem with a worked example', 'Pythagorean theorem'],
+    ['What study techniques are most effective according to research?',    'Study techniques'],
+    ['How do I write a strong argumentative essay?',                       'Essay writing'],
+    ['Explain photosynthesis simply',                                      'Photosynthesis'],
+    ['I feel overwhelmed with school. What should I do?',                  'Feeling overwhelmed'],
+    ["Explain Newton's three laws of motion with examples",                "Newton's laws"],
+  ];
+
+  const chipsEl = document.getElementById('suggChips');
+  chipData.forEach(([msg, label]) => {
+    const btn = document.createElement('button');
+    btn.className = 'chip';
+    btn.textContent = label;
+    btn.addEventListener('click', () => sendChip(msg));
+    chipsEl.appendChild(btn);
+  });
+}
+
+
+/* ────────────────────────────────────────────────
+   7. CLAUDE API CALL
+   Sends the complete conversation history with
+   every request for full contextual awareness.
+   Accepts any API key — validation is left to
+   the Anthropic API itself.
+──────────────────────────────────────────────── */
+
+const SYSTEM_PROMPT = `You are StudyBot, a professional and knowledgeable AI study companion for students.
+
+Your responsibilities:
+- Help students understand homework problems thoroughly, showing all working
+- Explain academic concepts clearly, adjusting complexity to the student's level
+- Provide evidence-based study tips, memory techniques, and time-management strategies
+- Support students who feel overwhelmed or unmotivated with practical, empathetic advice
+- Assist with all academic subjects: mathematics, sciences, history, literature, languages, and more
+
+Communication style:
+- Clear, precise, and professional — adapt to the student's apparent age and level
+- Warm and encouraging without being excessive
+- Use structured formatting (numbered steps, bullet points, headers) for multi-part answers
+- Always show mathematical working step by step — never just give a final answer
+- Use concrete real-world examples to illustrate abstract concepts
+
+Important: You have access to the full conversation history. Reference earlier messages naturally when relevant.`;
+
+async function callClaude(userText) {
+  const conv = activeConvo();
+  if (!conv) return;
+
+  // Build message array from full history + new message
+  const apiMessages = conv.messages.map(m => ({
+    role:    m.role === 'assistant' ? 'assistant' : 'user',
+    content: m.content,
+  }));
+  apiMessages.push({ role: 'user', content: userText });
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type':      'application/json',
+        'x-api-key':         appState.apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true',
+      },
+      body: JSON.stringify({
+        model:      'claude-sonnet-4-20250514',
+        max_tokens: 1500,
+        system:     SYSTEM_PROMPT,
+        messages:   apiMessages,
+      }),
+    });
+
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      const msg = errData?.error?.message || `API error (HTTP ${res.status})`;
+      appendBubble('error', msg, Date.now(), true);
+      return;
+    }
+
+    const data   = await res.json();
+    const aiText = data.content.filter(b => b.type === 'text').map(b => b.text).join('');
+
+    const ts = Date.now();
+    conv.messages.push({ role: 'assistant', content: aiText, ts });
+    saveConvs();
+
+    appendBubble('ai', aiText, ts, true);
+
+  } catch (err) {
+    let msg = err.message || 'An unknown error occurred.';
+    if (msg.includes('Failed to fetch') || msg.includes('NetworkError')) {
+      msg = 'Could not reach the Anthropic API. Please check your internet connection and API key.';
+    }
+    appendBubble('error', msg, Date.now(), true);
+  }
+}
+
+
+/* ────────────────────────────────────────────────
+   8. MARKDOWN RENDERER
+   Converts Markdown to HTML for AI bubbles.
+──────────────────────────────────────────────── */
+
+function renderMarkdown(text) {
+  // Escape HTML
+  let html = text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+
+  // Fenced code blocks
+  html = html.replace(/```[\w]*\n?([\s\S]*?)```/g, (_, c) => `<pre><code>${c.trim()}</code></pre>`);
+
+  // Inline code
+  html = html.replace(/`([^`\n]+)`/g, '<code>$1</code>');
+
+  // Bold / italic
+  html = html.replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>');
+  html = html.replace(/\*\*(.+?)\*\*/g,     '<strong>$1</strong>');
+  html = html.replace(/__(.+?)__/g,          '<strong>$1</strong>');
+  html = html.replace(/\*([^*\n]+)\*/g,      '<em>$1</em>');
+  html = html.replace(/_([^_\n]+)_/g,        '<em>$1</em>');
+
+  // Process lines
+  const lines  = html.split('\n');
+  const out    = [];
+  let inUL = false, inOL = false;
+
+  for (const line of lines) {
+    const ul = line.match(/^[ \t]*[-*+]\s+(.+)/);
+    const ol = line.match(/^[ \t]*\d+\.\s+(.+)/);
+    const h3 = line.match(/^###\s+(.+)/);
+    const h2 = line.match(/^##\s+(.+)/);
+    const h1 = line.match(/^#\s+(.+)/);
+
+    if (ul) {
+      if (!inUL) { if (inOL) { out.push('</ol>'); inOL = false; } out.push('<ul>'); inUL = true; }
+      out.push(`<li>${ul[1]}</li>`);
+    } else if (ol) {
+      if (!inOL) { if (inUL) { out.push('</ul>'); inUL = false; } out.push('<ol>'); inOL = true; }
+      out.push(`<li>${ol[1]}</li>`);
+    } else {
+      if (inUL) { out.push('</ul>'); inUL = false; }
+      if (inOL) { out.push('</ol>'); inOL = false; }
+
+      if (h3) out.push(`<strong>${h3[1]}</strong>`);
+      else if (h2) out.push(`<strong>${h2[1]}</strong>`);
+      else if (h1) out.push(`<strong>${h1[1]}</strong>`);
+      else if (line.trim() === '') out.push('');
+      else out.push(`<p>${line}</p>`);
+    }
+  }
+
+  if (inUL) out.push('</ul>');
+  if (inOL) out.push('</ol>');
+
+  return out.join('\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .replace(/<p><\/p>/g, '');
+}
+
+
+/* ────────────────────────────────────────────────
+   9. UI HELPERS
+──────────────────────────────────────────────── */
+
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 140) + 'px';
+}
+
+function scrollToBottom() {
+  const b = document.getElementById('chatBody');
+  if (b) b.scrollTop = b.scrollHeight;
+}
+
+function getTime(ts) {
+  return new Date(ts || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+
+function setSending(v) {
+  const btn   = document.getElementById('sendBtn');
+  const input = document.getElementById('msgInput');
+  if (btn)   btn.disabled   = v;
+  if (input) input.disabled = v;
+  appState.isStreaming = v;
+}
+
+
+/* ────────────────────────────────────────────────
+   10. MESSAGE RENDERING
+──────────────────────────────────────────────── */
+
+function appendBubble(type, text, ts, animate) {
+  const body = document.getElementById('chatBody');
+  if (!body) return;
+
+  // Remove welcome card on first real message
+  const card = document.getElementById('welcomeCard') || body.querySelector('.welcome-card');
+  if (card) card.remove();
+
+  const isUser = type === 'user';
+
+  const row = document.createElement('div');
+  row.className = 'msg-row ' + (isUser ? 'user' : 'ai');
+  if (!animate) row.style.animation = 'none';
+
+  const avatar = document.createElement('div');
+  avatar.className = 'avatar ' + (isUser ? 'user' : 'ai');
+  if (isUser && appState.currentUser) {
+    avatar.textContent = appState.currentUser.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+  } else {
+    avatar.textContent = isUser ? 'U' : 'S';
+  }
+
+  const bubble = document.createElement('div');
+  bubble.className = 'bubble ' + (type === 'error' ? 'error ai' : type);
+
+  if (isUser) {
+    bubble.textContent = text;
+  } else {
+    bubble.innerHTML = renderMarkdown(text);
+  }
+
+  const time = document.createElement('div');
+  time.className = 'msg-time';
+  time.textContent = getTime(ts);
+
+  if (isUser) {
+    row.appendChild(time);
+    row.appendChild(bubble);
+    row.appendChild(avatar);
+  } else {
+    row.appendChild(avatar);
+    row.appendChild(bubble);
+    row.appendChild(time);
+  }
+
+  body.appendChild(row);
+  scrollToBottom();
+}
+
+function showTyping() {
+  const body = document.getElementById('chatBody');
+  const row  = document.createElement('div');
+  row.className = 'typing-row';
+  row.id = 'typingIndicator';
+
+  const avatar = document.createElement('div');
+  avatar.className = 'avatar ai';
+  avatar.textContent = 'S';
+
+  const bubble = document.createElement('div');
+  bubble.className = 'typing-bubble';
+  bubble.innerHTML = '<div class="dot"></div><div class="dot"></div><div class="dot"></div>';
+
+  row.appendChild(avatar);
+  row.appendChild(bubble);
+  body.appendChild(row);
+  scrollToBottom();
+}
+
+function removeTyping() {
+  const el = document.getElementById('typingIndicator');
+  if (el) el.remove();
+}
+
+
+/* ────────────────────────────────────────────────
+   11. EVENT HANDLERS
+──────────────────────────────────────────────── */
+
+async function handleSend() {
+  if (appState.isStreaming) return;
+
+  const input = document.getElementById('msgInput');
+  const text  = input.value.trim();
+  if (!text) return;
+
+  // Gate on API key
+  if (!appState.apiKey || appState.apiKey.length < 8) {
+    appendBubble('error',
+      'Please paste your Anthropic API key in the field at the top right. You can get one free at console.anthropic.com.',
+      Date.now(), true);
+    return;
+  }
+
+  // Auto-create a conversation if none exists
+  if (!appState.activeId) {
+    const id = 'c_' + Date.now();
+    appState.conversations.unshift({ id, title: makeTitleFromMessage(text), messages: [], createdAt: Date.now() });
+    appState.activeId = id;
+    renderHistoryList();
+  }
+
+  const conv = activeConvo();
+
+  // Set title from first user message
+  if (conv.messages.length === 0) {
+    conv.title = makeTitleFromMessage(text);
+    document.getElementById('chatTitle').textContent = conv.title;
+    renderHistoryList();
+  }
+
+  // Save + render user message
+  const ts = Date.now();
+  conv.messages.push({ role: 'user', content: text, ts });
+  saveConvs();
+  appendBubble('user', text, ts, true);
+
+  // Reset input
+  input.value = '';
+  input.style.height = 'auto';
+
+  setSending(true);
+  showTyping();
+
+  await callClaude(text);
+
+  removeTyping();
+  setSending(false);
+  input.focus();
+}
+
+function handleKey(e) {
+  // Send on Enter (without Shift). Shift+Enter inserts a newline.
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    handleSend();
+  }
+}
+
+function sendChip(msg) {
+  const input = document.getElementById('msgInput');
+  input.value = msg;
+  autoResize(input);
+  input.focus();
+  handleSend();
+}
+
+</script>
+</body>
+</html>
